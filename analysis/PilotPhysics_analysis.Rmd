@@ -30,9 +30,9 @@ library(glmmTMB) # For fitting beta distributions
 library(effects)
 
 
-#pilotdata <- read.csv(here("raw_data","pilot_included_trials.csv"), stringsAsFactors = FALSE)
+#pilotdata <- read.csv(here("raw_data","pilot_included_trials_data.csv"), stringsAsFactors = FALSE)
 #NOTE: Won't work off of Melissa's laptop for privacy, use the following instead
-pilotdata <- read.csv(here("raw_data","salted_pilot_included_trials.csv"), stringsAsFactors = FALSE)
+pilotdata <- read.csv(here("raw_data","salted_pilot_included_trials_data.csv"), stringsAsFactors = FALSE)
 
 # Useful resources
 # https://www.theanalysisfactor.com/r-glm-model-fit/
