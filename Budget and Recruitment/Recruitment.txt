@@ -1,0 +1,83 @@
+Recruitment plan:
+
+* Start week 1 with the easy stuff: westgate, FB, cambridgefamilies, users, SciStarter. Prep:
+	- draft email to eastgate/westgate
+	- draft FB post
+	- draft email to cambridgefamilies
+	- draft email to users
+	- prep to send email to users
+	- draft post on SciStarter
+	
+Next:
+    reddit
+    metafilter
+    friends
+    ask for help
+	
+* Dec 12, after dealing with any emergent technical problems and assuming existing response is insufficient, reach out to other labs.
+	- individually to LDS, Celeste, Mike, our lab
+	- CDS listserv, lookit-research
+	
+* Dec 19, start drafting emails to mommybloggers & look into MIT press office (combine with coverage of new papers)
+
+* If response is insufficient by early January, look into paying for advertising or ramping up media efforts. 
+
+
+On Monday:
+- Put study on prod & remove pilot.
+- Send initial recruitment emails
+
+
+
+Westgate:
+
+Participants needed for a study about how babies understand physics!
+
+Hi Westgate,
+
+I'm writing as a former Westgate resident, mom of one (soon to be two), and MIT grad student to let Westgate parents know about a new study looking at what babies think about physics principles, like gravity and inertia. 
+
+We're looking for babies between 4 and 12 months old to participate in this ONLINE study, 'Your baby the physicist,' on the Lookit website. Study sessions take about 15 minutes and involve watching pairs of videos of physical events, one on the left and on the right of your computer monitor. While your baby watches, webcam video is sent back to the lab for later analysis. We're interested in where he/she chooses to look--at the event that's more likely (like a ball falling down) or less likely (a ball falling up)?
+
+Using many of these video pairs and looking for consistent trends, we should be able to build up a detailed picture of your child's beliefs about how the physical world works. This study will be one of the first to look in detail not just at infants' abilities collectively, but at individual differences in their expectations and styles of responding.
+
+You can complete as many or as few sessions as you want with your child, and you participate FROM HOME at any time that's convenient for you (no need to schedule sessions). Our goal--unprecedented in cognitive development research--is to observe as many participants as possible over at least 15 sessions each. If you complete all 15 sessions in two months, we'll be able to send you a personalized report about your child's looking patterns once video coding is done!
+
+To learn more or get started, visit <a href='https://lookit.mit.edu' target=_blank>Lookit</a>! I'm also happy to answer any questions.
+
+Happy Thanksgiving,
+
+Kim
+
+P.S. If you have friends with kids in the age range, please feel free to pass this along to them, or share our Facebook page<>--we'd be grateful for any help! Families can participate from anywhere in the world. 
+
+
+
+
+
+Facebook:
+
+It's finally happening! We're starting our first original study on Lookit, 'Your baby the physicist,' where we're trying to build up detailed profiles of the principles (like gravity and inertia) that individual infants use to understand the physical world. We're especially looking for families who want to try to complete multiple study sessions over a few months--if you complete 15 sessions, we'll be able to send you a personalized report about your child's looking patterns once we have the video coding done. Babies 4 months up to one year old who haven't already participated in the pilot study are eligible to participate. Check it out on Lookit!
+
+
+CAMBRIDGE-FAMILIES:
+
+Participants needed for a study about how babies understand physics!
+
+I'm writing as a Cambridge mom of one (soon to be two!) and MIT grad student to let folks know about a new study looking at what babies think about physics principles, like gravity and inertia. 
+
+We're looking for babies between 4 and 12 months old to participate in this ONLINE study, 'Your baby the physicist,' on the Lookit website. Study sessions take about 15 minutes and involve watching pairs of videos of physical events, one on the left and on the right of your computer monitor. While your baby watches, webcam video is sent back to the lab for later analysis. We're interested in where he/she chooses to look--at the event that's more likely (like a ball falling down) or less likely (a ball falling up)?
+
+Using many of these video pairs and looking for consistent trends, we should be able to build up a detailed picture of your child's beliefs about how the physical world works. This study will be one of the first to look in detail not just at infants' abilities collectively, but at individual differences in their expectations and styles of responding.
+
+You can complete as many or as few sessions as you want with your child, and you participate FROM HOME at any time that's convenient for you (no need to schedule sessions). Our goal--unprecedented in cognitive development research--is to observe as many participants as possible over at least 15 sessions each. If you complete all 15 sessions in two months, we'll be able to send you a personalized report about your child's looking patterns once video coding is done!
+
+To learn more or get started, visit <a href='https://lookit.mit.edu' target=_blank>Lookit</a>! I'm also happy to answer any questions.
+
+Happy Thanksgiving,
+
+Kim
+
+P.S. If you have friends with kids in the age range, please feel free to pass this along to them, or share our Facebook page<>--we'd be grateful for any help! Families can participate from anywhere in the world. 
+
+

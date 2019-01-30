@@ -1,0 +1,966 @@
+---
+title: "Preferential Physics - pilot analysis and preregistration!"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '2'
+  html_notebook:
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+---
+
+
+```{r preliminaries, echo=FALSE, warning=FALSE, include=FALSE}
+library(here)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(tibble)
+#library(vioplot)
+#library(corrgram)
+library(Hmisc)
+library(car)
+library(nlme) # allows use of weights
+library(lme4) # newer/maintained, allows logistic regression
+#library(lsmeans)
+library(MuMIn)
+library(ids)
+library(glmmTMB) # For fitting beta distributions
+library(effects)
+
+
+#pilotdata <- read.csv(here("raw_data","pilot_included_trials.csv"), stringsAsFactors = FALSE)
+#NOTE: Won't work off of Melissa's laptop for privacy, use the following instead
+pilotdata <- read.csv(here("raw_data","salted_pilot_included_trials.csv"), stringsAsFactors = FALSE)
+
+# Useful resources
+# https://www.theanalysisfactor.com/r-glm-model-fit/
+```
+
+This document is the preregistration for the Preferential Physics project on Lookit. Data collection is currently underway, but sample size has been set prior to data collection kickoff (50 participants reaching 12th session), and the vast majority of videos haven't even been coded for looks, much less critical DVs calculated.
+
+This document contains a brief orientation to the project, links to relevant other documentation, and a reproducible set of analyses that reads in a set of pilot data and attempts to set up the model comparisons we actually care about!
+
+It functions as a preregistration in the sense that, the final dataset will be run through this analytic code to produce the visualizations and models shown here; any additional analyses added later can be treated as exploratory. Where we have 'decision trees' or some aspect of the analysis is conditional on features of the final dataset, we note this where we know about it and specify how we'll make those decisions. 
+
+If you'd like to skip straight to the preregistration details, start at the *Data Contents* section. 
+
+# Introduction
+
+The idea is to use dense sampling of individual infants on Lookit to conduct a detailed assessment of understanding of several physical principles. How stable are individual components across sessions and how independent? What does partial knowledge look like at the individual level?
+
+We are interested in infants' preferential looking ratio to simple violations of:
+
+*	Gravity: Completely unsupported objects should fall down immediately, rather than moving up, continuing in their current trajectory, or moving down at some delay.
+
+*	Inertia: Objects should continue roughly in their current trajectory when gravity is not a factor, rather than stopping and starting or turning around.
+
+*	Support: which of the following should fall (vs. stay put) after being placed?
+
+    + An object placed mostly on the anchor
+
+    + An object placed only slightly on the anchor
+
+    + An object touching the side or bottom of the anchor
+
+    + An object near the anchor but not touching it
+ 
+## Big picture
+
+Why study individual behavior in more detail--what do we lose in studying groups of kids? We don’t know the extent to which a success means that a significant fraction of kids this age can do this task VS that all kids of this age can do this task to a significant degree. And even looking at the distribution of scores doesn’t clear this up, unless it’s an incredibly strong result (e.g. all kids get 9-10 of 10 questions right, or no kids get more than 6 out of 10). 
+This matters for
+
+*	understanding how abilities are related to each other: we can’t get nearly as much out of age-based progressions without knowing how the noise works—especially for results of the form “n-month-olds, but not m-month-olds, can do X”
+
+*	understanding what partial knowledge & mechanisms of change in a domain look like: when kids “fail,” is that some kids making a correct prediction and some making an incorrect prediction? Or are they all failing to make any prediction and/or predicting at chance? When kids succeed but not at ceiling, are some getting one aspect and some another?
+ 
+It may be that some kids don’t express nearly-universal knowledge on the dependent measures we collect. We can evaluate this explanation for noise and/or individual differences by studying the methods themselves, and kids’ behavior on them: e.g., can we predict the types of preferential looking responses we get from kids based on control tasks? How stable are those controls and task performance across sessions? (Especially interesting would be differences within kids in expression: kids may genuinely express knowledge at some times, but not others, due to attentional/emotional state changes.) 
+ 
+Especially in development, where we’re interested in the underpinnings of human cognition, the difference between “some babies use this type of information but others do something else” and “all babies have this type of information available to them, unless something’s wrong” matters a lot—this is exactly where we care about universality. 
+
+## Experimental paradigm
+
+Children complete 24 20-second preferential looking trials per session; families are encouraged to complete 15 sessions within 2 months. Parents complete a short mood survey and go through some instructions before the preferential looking portion. They’re asked to hold their children looking over their shoulders during this portion to avoid parental bias. Parents can end the study at any point and skip to the post-study survey.
+ 
+Each trial begins with an object intro (video of Kim saying “Look, this is a …”) and demonstrating use of an object – e.g. biting into an apple, putting on hand lotion, drawing with a marker, eating with a spoon) that lasts about 5 seconds.
+
+<video width="320" height="240" controls>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/examples/0_introsA.mp4" type="video/mp4">
+</video>
+
+This is intended as an attention-getter to re-orient children towards the center, while in principle reinforcing that the object in question is not an agent and should be expected to follow normal physical laws. 
+
+Then, two events involving that object are shown simultaneously, one on the left and one on the right, looping for 24s (event videos range from about 2-5s). Events always show the same object, same camera angle, same background, with a difference only in the “outcome.” Event types are shown in the table below; each concept is presented 4-6 times, with 2-3 repetitions of each event type. Although events are short, they loop continuously for 20s. Realtime events are shown so that “expected” events are at natural speeds, and not potentially seen as violating physical principles due to happening too slowly.
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/stimuli/table/mp4/sbs_table_continue_down_lotion_c2_1_NR.mp4" type="video/mp4">
+</video>
+
+Parents can pause individual trials. If they pause during the intro, they just start over upon restarting. If they pause during the test (up to one time per trial) they restart from the intro, but then the left and right test videos are switched for the test phase.
+ 
+### Trial assignment & ordering
+
+(See below for descriptions of these trial types.) Trials cycle through gravity, inertia+calibration, support, and control (same/salience) pairings during a session; the order of these concepts is chosen from a list and changed (cycling through a list of orders) each session. There are six videos shown in each category in total. 
+
+Within each category, objects are assigned to comparison types (e.g. “apple” assigned to “table, down vs. up”) by choosing from a list of acceptable mappings, again incremented per session. (The first session value was selected randomly from the first six options initially [by accident], and is now selected from all possible mappings.) 
+
+There are six possible comparisons for the stay and fall events; three comparisons are assigned to stay and three to fall, with the selection again cycling through a random list of such assignments per session. Left/right placement, horizontal flipping of the left and right events, camera angles, and backgrounds are chosen randomly with the constraint that half of the ‘more probable’ events are on the left within each category. Calibration trials (grouped with inertia videos for purposes of assigning object intros) are placed at trials 3 and 6, so that they are always available for kids who completed enough trials for the session to be included (and so that if there are differences in coding quality across trials, we’re not excluding on the basis of when calibration happened).
+
+
+## Event types
+
+### Gravity
+
+#### Table
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/examples/3_table.mp4" type="video/mp4">
+</video>
+Object is rolled/slid off a table and continues *down*, *horizontal*, or *up*.
+
+
+#### Toss 
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/examples/2_toss.mp4" type="video/mp4">
+</video>
+Object in hand is *tossed down, falls UP*, *tossed up, falls DOWN*.
+
+#### Ramp
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/examples/1_ramp.mp4" type="video/mp4">
+</video>
+
+Object is placed in center of ramp and released to roll *down* or *up*.
+
+### Inertia
+
+#### Stop
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/examples/4_stop.mp4" type="video/mp4">
+</video>
+
+Object rolls from one side of screen and stops in the middle, then re-starts *on its own*, or *by a hand*.
+
+#### Reverse
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/examples/4_reverse.mp4" type="video/mp4">
+</video>
+
+Object rolls/slides from one side of the screen and collides with a *barrier*, or takes the same trajectory colliding against *no bairrier*.
+
+### Support
+
+#### Fall
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/examples/5_fall.mp4" type="video/mp4">
+</video>
+
+An object is placed (*mostly on*/*slightly on*/*next to*/*near*) on a cabinet and immediately falls.
+
+#### Stay
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/examples/6_stay.mp4" type="video/mp4">
+</video>
+
+An object is placed (*mostly on*/*slightly on*/*next to*/*near*) on a cabinet and stays there.
+
+### Control
+
+#### Same
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/examples/7_control_same.mp4" type="video/mp4">
+</video>
+
+Distinguishable but similar physically-possible human actions on objects, like rotating an object about one axis vs. another
+
+#### Salience
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/examples/7_control_salience.mp4" type="video/mp4">
+</video>
+
+Physically-possible human actions on objects, some more interesting, like flipping a spoon vs. slowly extending it or erasing a drawing vs. an empty board.
+
+#### Calibration
+
+<video width="320" height="240" controls loop>
+  <source src="https://s3.amazonaws.com/lookitcontents/exp-physics-final/stimuli/attention/mp4/calibration_LR.mp4" type="video/mp4">
+</video>
+
+A spinning ball moves across the entire screen.
+
+# Dataset contents
+
+Here we describe the information that will be available in the final dataset. Some of this info is *not* available for the pilot dataset, in particular anything having to do with more than one session.
+
+### Per child
+
+*	Age at start
+
+*	Demographic info (optional, typically reported): family income, languages spoken at home, parent education level(s), number of parents in the home, number of children’s books in the home, child’s race, number and age of siblings, country + US state if in US, urban/suburban/rural
+
+### Per session (Avaliable once video is hand-coded)
+
+* Child’s age
+
+*	Number of previous sessions completed
+
+* Time since last session
+
+*	Mood data (Before beginning study, by parent report. Scales 1-7: CHILD: tired-rested, sick-healthy, fussy-happy, calm-active; PARENT: tired-energetic, overwhelmed-ontopofthings, upset-happy. How long since child woke up, how long since child ate, how long until child is due for nap/sleep; what child was doing before this.)
+
+### Per trial
+
+*	Time looking L, R (full time sequence of looks left, right, away)
+
+*	Number of fixations (derived from the first one)
+
+* Proportion looking to L, out of time looking to screen (derived from the first one)
+
+*	Parent behavior: times of talking, pointing, and peeking
+
+*	Infant behavior: times of fussing & rating of fussiness level low or high
+
+*	Trial number
+
+### Predictors for fraction time to left
+
+*	Comparison type (e.g. ramp up vs. down), nested within
+
+*	Event type (e.g. ramp), nested within...
+
+*	Concept (gravity, inertia, support)
+
+*	Object (apple, lotion bottle, scissors...)
+
+*	Whether each side is unexpected (i.e., does the event on the left clearly violate a physical principle? Does the event on the right? Sometimes both are unexpected to adults, e.g. when an object near a cabinet and an object next-to a cabinet stay put; sometimes neither is. In some cases this depends on the child’s potential beliefs, see modeling…) & which side is *less* expected.
+
+## Sample size & recruitment procedures
+
+Age range 4-12 months at start of study; continue for up to 61 days; target ‘complete’ dataset is 12 usable sessions. (No major age differences in data quality or salience/same controls seen in piloting.)
+ 
+Plan to recruit as large a balanced sample as practical given time constraints on both testing and recruiting; aiming for 50 participants with a complete dataset. All recruitment decisions are / have been made without examining dependent variables. This will also be the case if we must terminate data collection early (i.e. for timing/funding constraints)
+
+## Data exclusion & disambiguation
+  
+All partial datasets (<12 sessions) and any extra data collected will be included in the analysis. Data will only be excluded from analysis if it meets any of the criteria below; we aim to include as much data as possible and use analyses that are robust to missing/'unbalanced' data. Data may be excluded at the level of the participant (i.e. all data from that child is excluded), sessions, or individual trial. 
+
+Note also that because (a) we may exclude some-but-not-all data from a participant and (b) the number of times baby is taken to have seen the study is relevant, the 'study number' (= number of sessions seen) may differ from a simple count of the sessions that are present in the dataset. 
+
+### Child level
+
+* Gestational age at birth < 37 weeks, for any analyses using age. Unknown gestational age will be used but prevalence reported. (Followup to check that inclusion of premature infants does not qualitatively affect other results, and/or to display results from premature infants with adjusted/non-adjusted age - exploratory.)
+
+* Children who participated in the pilot study
+
+* Children whose parents spontaneously report developmental/medical issues that would likely explain some differences in task: vision or hearing impairment; cognitive or neurological disorders including due to trisomies. 
+
+* Note again: We *include* data from children with any number of sessions (will probably have many with <12 in addition to “complete” data); analyses described should be able to handle this appropriately.
+
+
+### Session level
+
+* Sessions where children are outside age range of 4-14 months, except for binned-by-age analyses where we may display data from children outside the age range (without affecting any other values) if we end up having it. Adjusted age will be used for premature infants.
+
+* Sessions with < 6 trials (& don’t count as a session for session # purposes). Parents are encouraged not to complete sessions within 6 hours of each other. For each session (process later -> earlier), if another session with fewer completed trials happened within six hours, use this one instead.This leads to reasonable outcomes even in the unlikely event someone’s doing the study every 5 hours. 
+
+* Require calibration performance >75% to use session. Calibration scores seem to be mostly due to difficulty coding and might therefore index overall confidence in other judgments; timing differences in webcam stream vs. displayed stimuli will also affect calibration. Pool all looking across the two calibration trials to compute an overall calibration score, so that if kids aren’t looking as much for one of the trials we don’t average in a much noisier measurement. Score is fractional looking time to correct side during the middle of periods when the ball should be static: [0.5, 3.5], [5.5, 8.5], [10.5, 13.5], [15.5, 18.5], [20.5, 23.5].
+
+* If the participant has <12 usable sessions spread over >60 days, use sessions from the earliest 60-day period (inclusive) with the most usable sessions. If the participant has >=12 usable sessions over >60 days, use sessions from the earliest 60-day period (inclusive) with at least 12 sessions. 
+
+* Where absolute session number (as an index of how many times the child has seen stimuli, etc.) is relevant, assign the first session used in analysis a session number according to the number of ‘experienced sessions’ in the preceding 60 days. Experienced sessions include sessions where the child is out of age range or calibration performance is poor, but not sessions with <6 trials. (For instance, if a child participates at 4 months of age and then 12 times from 10-11 months, the latter set of data is used and the first session at 10 months is considered session 1. If a child participates on days 1, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, then sessions starting at day 30 are used but the first session number is 2.
+
+
+### Trial level
+
+* Require >= 2s looking to use a trial. Don’t otherwise deal with shorter/longer LTs except in (exploratory) model.
+
+* Omit periods where the child is out of frame or gaze is otherwise impossible to code. Treat as out of frame any periods where the video is ‘frozen’ for >1s (start treating as out of frame 1s after this period begins) and report prevalence.
+
+* Exclude trials where child is fussing >50% of the trial. In contrast to omitting periods where child is fussing, this avoids dependence on exactly which frames are considered fussy, at the cost of a threshold effect we expect not to affect many trials. >50% applies to length of video, not otherwise codable data (i.e. we allow fuss coding during outofframe periods).
+
+* Parent interference: Exclude periods of trials after parent peeks, points while peeking, or speaks in any way that could bias child (“what’s that ball doing?” but not “keep looking sweetie!”) Include periods where the parent’s eyes are not visible and we can’t tell where they’re looking (unless there is reason to believe they are looking) and periods where the parent is looking away but may see stimuli peripherally.
+
+
+# The Pilot Dataset
+
+This is a pilot dataset, it consists of (cleaned, post-data exclusion, post trial-proportion calculations) a set of subjects who participated in *one* physics session that is similar to the sessions that are being run in the main data collection. The principle difference is that the pilot dataset has exactly 1 session per participant, and the conditions X and Y are absent. 
+
+QUESTION FOR KIM: Is it the case that all exclusion criteria have been applied in the pilot dataset? (In particular: criteria for calibration?)
+
+
+```{r, echo = FALSE}
+head(pilotdata)
+
+#Columns that may include PII
+#-Birthday
+#-Test date + age
+#-Name/email strings
+
+# head(dplyr::select(pilotdata, child.profileId, ageRegistration, ageExitsurvey))
+# 
+# #Good news! Only child.profileId is a possible danger (participants could freely choose a name, and often
+# #used some or all of their real name); dataset has age but is fully date free
+# #Add human-friendly Ids in place of those
+# set.seed(25432)
+# pilotdata <- pilotdata %>%
+#   group_by(child.profileId) %>%
+#   mutate(child.proquint = proquint())%>%
+#   ungroup()%>%
+#   dplyr::select(-c(child.profileId,X))
+# 
+# write.csv(pilotdata, here("raw_data","salted_pilot_included_trials.csv"))
+
+```
+
+```{r echo = FALSE}
+#This is the place to make sure variables are all well behaved up here (e.g. factors are factors, numerals are numerals, NA are NA)!
+
+pilotdata <- pilotdata %>%
+  mutate(lessExpectedLeft = factor(lessExpectedLeft))
+```
+
+As a warmup, we'll begin by visualizing the pilot dataset for some basic properties. First, we expect that babies' total looking time will drop over time (i.e. later trials have shorter looking times). 
+
+```{r, echo = FALSE} 
+LT_means_per_child_per_trial <- pilotdata %>%
+  group_by(shortId, trialnum) %>%
+  summarise(TLT = mean(totalLT))
+
+g <- ggplot(LT_means_per_child_per_trial, aes(y = TLT, x = trialnum)) +
+  geom_jitter(alpha = 0.1) +
+  geom_smooth(method = "lm")+
+  ylab('Looking time in seconds')+
+  xlab('Trial number')
+
+print(g)
+```
+
+Next, we'll begin plot the critical DV - how much time do babies spend looking at surprising things? Note a complication of the dataset here: we will be *modeling* the 'raw' dependent variable, `fracLeft` (that is, out of some amount of time staring at the screen, what percentage of that time is spent looking at the left-hand video?). Then in general, we'll be asking whether this proportion is *affected* by `lessExpectedLeft` - is whichever video is most surprising (from an adult point of view) located on the left or the right?
+
+Remember that `lessExpectedLeft` corresponds to a different video/video pair type for every `event` and `concept`. Critically, this value is undefined for some event types, in particular the SAME events. 
+
+First, a histogram of distributions:
+
+```{r, echo = FALSE}
+ggplot(data = pilotdata, aes(x=fracLeft)) +
+  geom_histogram(bins = 20)
+
+```
+
+This resembles a symmetric beta distribution with a 'bump' in the middle (or a mixture of multiple parameter settings?.  This is actually sensible, because it includes counterbalancing of all 'surprisal' events, and because the above contains cases where babies may usually look about equally at both sides (e.g. the SAME condition), and cases where some (but not all!) babies will consistently look more at one video or the other. To test this, let's try faceting out by event.
+
+```{r echo = FALSE}
+ggplot(data = pilotdata, aes(x=fracLeft)) +
+  geom_histogram(bins = 20) +
+  facet_wrap(~event)
+```
+Plot again without calibration event so we can see more clearly:
+
+```{r echo = FALSE}
+pilotdata_nc <- pilotdata %>%
+  filter(event != "calibration")
+
+ggplot(data = pilotdata_nc, aes(x=fracLeft)) +
+  geom_histogram(bins = 20) +
+  facet_wrap(~event)
+```
+
+# Build the basic model
+
+Let's assume that we're  dealing with beta distributions. Time to build up the model! We'll use the glmmTMB package.
+
+QUESTION FOR PATRICK: Any reason/limitation of this package to be aware of?
+
+First, set up the family of distributions we'll be using:
+
+```{r echo=FALSE}
+
+#Beta distributions hate exact 0/1 values, transform them away. 
+convert01 <- function(y) {
+  n <- length(y)
+  y2 <- (y*(n-1) + 0.5)/n
+  return(y2)
+}
+
+pilotdata <- pilotdata %>%
+  mutate(fracLeft_tr = convert01(fracLeft))
+
+
+fitbeta1 <- glmmTMB(fracLeft_tr ~ 1, data = pilotdata, family = beta_family(link = "logit"))
+summary(fitbeta1)
+```
+
+
+#### Shared random/fixed effects
+
+Our goal here is to deal with the 'boring' fixed & random effects structure that should be the starting point for *all subsequent models*. That is, we want to capture the structure of the task is a sensible way, so we can test hypotheses on top of it. 
+
+Some reminders:
+
+shortID - the participant
+stimuli - the individual stimulus
+
+We aim for conclusions to generalize over both individual children & stimuli, so treat both as random factors.
+
+```{r echo=FALSE}
+fitbeta2 <- glmmTMB(fracLeft_tr ~ 1 + (1|shortId) + (1|stimuli), data = pilotdata, family = beta_family(link = "logit"))
+summary(fitbeta2)
+```
+
+(Fitting just intercepts for now)
+
+QUESTION FOR PATRICK: APPROPRIATE SLOPES? The standard advice I've recieved is to include maximal slopes for all random effects, but if I'm going to be building up the fixed effects as I go, I'm not sure what the right order of operations is here. 
+
+Some 'boring' fixed effects that are relevant for all items:
+
+ageRegistration - the age of the child
+trialnum - The trial number
+
+Both of these may matter on their own (in general, looking times curves could change with age, or with time going through the experiment), and may also interact (older children might get bored faster, for instance.)
+
+```{r echo=FALSE, warning=FALSE}
+fitbeta3 <- glmmTMB(fracLeft_tr ~ ageRegistration*trialnum + (1|shortId) + (1|stimuli), data = pilotdata, family = beta_family(link = "logit"))
+summary(fitbeta3)
+```
+
+QUESTION FOR PATRICK: 
+
+1) Should I be deciding at this stage whether to drop any of these factors? Or specifying a decision rule that I'll use to determine how to treat the eventual dataset?
+
+2) Many 'value out of range in 'lgamma'' messages generated. When are these problematic vs. not? Sometimes sensible-looking summaries are generated, can I trust them?
+
+3) NOTE: In the full dataset, we'd also want to include a term for session number (how many sessions this child has seen.) This will be very highly correlated with age, since they both unfold over time. What to do about this?
+
+More complex models of the task itself may be appropriate (especially for the 'Looking Personalities' analyses), but we aim to select just one model to use for building up the physics models. Once we settle on this 'task model', we can proceed to work on adding factors for modeling the questions we're interested in!
+
+4) Beta distribution family has two parameters. How are those parameters 'allowed' to vary if ageRegistation is included as a single term as above? Ideally, I'd like to be able to capture age trends like "as AgeRegistration rises, the mean moves away from 0.5".
+
+5)Is there a good way to save the model we select here as a variable so it can be referenced in subsequent models below? It's possible that a slightly different model will be warranted in the final dataset than this pilot dataset (we'll need to preregister a decision rule here.)
+
+#### Physics predictor
+
+The primary predictor we are interested in is whether children look longer (or at least a non-chance fraction!) at unexpected events (lessExpectedLeft). To complicate things, this value is undefined for two event types (same, calibration). We'll leave those out for now (they are used only for the 'looking personality' results.)
+
+```{r echo=FALSE}
+
+same_cal <- pilotdata %>%
+  filter(event == "same"|event == "calibration")
+
+physics_events <- pilotdata %>%
+  filter(event != "same" & event != "calibration")
+```
+
+For the questions about infants' knowledge of phyics, we'll limit ourselves to this question about unexpectedness! To model this, we simply add a term to the model: 
+
+```{r echo=FALSE, warning=FALSE}
+
+fitbeta4 <- glmmTMB(fracLeft_tr ~ lessExpectedLeft*ageRegistration*trialnum + (1|shortId) + (1|stimuli), data = physics_events, family = beta_family(link = "logit"))
+summary(fitbeta4)
+```
+
+NOTE: In the pilot dataset, this actually makes the overall AIC/BIC get *worse*; this is relatively unsurprising since many of these comparisons yield a finding (when graphed) that children do *not* seem to be affected by surprisingness! It would also not be terribly shocking to find in the real dataset, since lumping all the event types and ages together is not appropriate. 
+
+QUESTION FOR PATRICK: I am used to comparing models with anova(model1, model2), but wonder if there is a better choice. I would like to be able to express confidence that including the term is warranted (e.g. 'surprisingness matters'). This could be p-values or something else, but would strongly prefer to be using only one (family of) hypothesis-testing metric.
+
+# Event-general models & hypotheses
+
+To get actually interpretable models that we can test, first take each event type (Ramp, Fall, Stay, etc.) individually, and (a) ask whether the interaction between surprisingness and age is significant overall for that subset (i.e. repeat the 'task model' for each event type, as though they were independent experiments), (b) ask whether there is a significant difference from chance at 12mo, and (c) Display age trends. 
+
+QUESTION FOR KIM: You wrote "Could also do mean fLT ~ age + comparisonType + (1|child) or similar, except for concerns about differing correlations among subsets of comparison types." This is what I did (since both are identical for the single-session version), but can you say more about this?
+
+So, we'll first set up the common plan, and then execute each!
+
+```{r echo=FALSE}
+
+#gravity
+#table (New for main dataset)
+toss <- filter(physics_events, event == "toss")
+ramp <- filter(physics_events, event == "ramp")
+
+#inertia
+#stop (New for main dataset)
+#reverse (New for main dataset)
+
+#support
+fall <- filter(physics_events, event == "fall")
+stay <- filter(physics_events, event == "stay")
+
+#control
+salience <- filter(physics_events, event == "salience")
+
+```
+
+# Salience
+
+(This is the template model for all other individual events; just including Salience here for space; analyses will be parallel.)
+
+```{r echo=FALSE}
+#Model
+fitbeta_salience <- glmmTMB(fracLeft_tr ~ lessExpectedLeft*ageRegistration*trialnum + (1|shortId) + (1|stimuli), data = salience, family = beta_family(link = "logit"))
+summary(fitbeta_salience)
+
+#Value at 12 months?
+predict_age_at = seq(4,15,1)
+predict_fracLeft = Effect(mod = fitbeta_salience, focal.predictors = c("ageRegistration", "lessExpectedLeft"), xlevels = 100)
+
+#Convert to fracLessExpected
+predict_lessExpected <- as.data.frame(predict_fracLeft) %>%
+  mutate(fracLeft = fit,
+         fracLessExpected = ifelse(lessExpectedLeft == TRUE, fit, 1-fit),
+         lowerLE = ifelse(lessExpectedLeft == TRUE, lower, 1-upper),
+         upperLE = ifelse(lessExpectedLeft == TRUE, upper, 1-lower)) %>%
+  group_by(ageRegistration)%>%
+  dplyr::summarize(fLE = mean(fracLessExpected), se = mean(se), lower = mean(lowerLE), upper = mean(upperLE))
+
+# Do a plot!
+toplot <- salience %>%
+  group_by(shortId)%>%
+  dplyr::summarize(fLE = mean(fracLessExpected), age = mean(ageRegistration))
+
+g = ggplot() +
+  geom_jitter(data = toplot, aes(y=fLE, x=age)) +
+  geom_hline(yintercept=0.5, linetype = 'dashed') +
+  geom_line(data=predict_lessExpected,aes(x = ageRegistration, y = fLE),lwd=1, linetype="solid")+
+  geom_errorbar(data=predict_lessExpected,aes(x = ageRegistration, ymin=lower, ymax=upper))
+  
+g
+```
+
+# Event-specific models and hypotheses
+
+After predicting whether children become more sensitive to (adult-defined) surprising versions > less surprising versions of each event type, we will ask some further questions that are specific to each domain, and also attempt to discover whether the theoretical clusterings (of comparisons into events, and events into concepts) actually reflect individual childrens' performances. 
+
+For all of these, we'll start with 'surprisingness' model above, and ask whether various additions of the 'comparison' factor improve fit. 
+
+## Gravity
+
+### Table
+
+Gravity, graded judgment: predict table up v down > down v continue > up v continue. Is each pairwise comparison significant?
+
+Method: Filter to each pairwise comparison, ask whether including the comparison type (e.g. up/down vs up/continue) improves model fit. 
+
+TABLE event doesn't exist in the pilot set, so try this with two examples from the 'fall' event instead:
+
+```{r echo=FALSE}
+#Model (Start with the same 'surprisingness' base model for the event as above)
+
+fall_mo_vs_near <- filter(fall, comparison == "mostly-on:near" | comparison == "mostly-on:slightly-on")
+
+fitbeta_fall_mo_vs_near <- glmmTMB(fracLeft_tr ~ lessExpectedLeft*ageRegistration*trialnum + (1|shortId) + (1|stimuli), data = fall_mo_vs_near, family = beta_family(link = "logit"))
+summary(fitbeta_fall_mo_vs_near)
+
+#Add comparisons as a factor
+fitbeta_fall_mo_vs_near_comparisons <- glmmTMB(fracLeft_tr ~ comparison*lessExpectedLeft*ageRegistration*trialnum + (1|shortId) + (1|stimuli), data = fall_mo_vs_near, family = beta_family(link = "logit"))
+summary(fitbeta_fall_mo_vs_near_comparisons)
+
+#This model doesn't converge ("NA/NaN function evaluation")! What's the backup plan? 
+```
+
+QUESTION FOR PATRICK: These models don't converge, and I'm not sure the correct procedure for proceeding in this case!
+
+### Toss, Ramp
+
+(No within-event tests)
+
+## Inertia
+
+### Stop, Reverse
+
+(No within-event tests)
+
+## Support
+
+### Stay/Fall
+
+QUESTION FOR PATRICK (this whole section)
+
+Comparisons are theoretically paired across the stay/fall distinction. Specifically, we expect each comparison to *anticorrelate* across the stay/fall distinction. Additionally, we expect that different comparisons should 'come online' at different points.
+
+The goal here is to define a model that can support asking these questions. My best guess at this model would be:
+
+```{r}
+support <- bind_rows(stay, fall)
+
+#Original 'surprisingness' model
+fitbeta_support <- glmmTMB(fracLeft_tr ~ lessExpectedLeft*ageRegistration*trialnum + (1|shortId) + (1|stimuli), data = support, family = beta_family(link = "logit"))
+summary(fitbeta_support)
+
+# Add event/comparison terms
+
+fitbeta_support_comparisons <- glmmTMB(fracLeft_tr ~ ageRegistration*lessExpectedLeft*event*comparison + ageRegistration*trialnum + (1|shortId) + (1|stimuli), data = support, family = beta_family(link = "logit"))
+summary(fitbeta_support_comparisons)
+
+#This doesn't converge!
+```
+
+Once specified, we'd like to ask the following questions:
+
+- Is it the case that predictions for STAY events 'anti correlate' with FALL events?
+
+- Intuitive approximate magnitude ordering based on adult understanding of physics: mostly-near, mostly-next, mostly-slightly, slightly-near, slightly-next, next-near. What orders do we actually see w/i kids?
+
+
+QUESTION: FOR PATRICK: I'd like to be able to specify a planned comparison of these orderings, but I'm not sure how!
+
+HYPOTHESIS SUGGESTIONS FROM KIM: Stage theory: Might make crude predictions based on which should stay vs. fall—if only mostly-on should stay put, then mostly-slightly, mostly-next, mostly-near are bigger differences and might show bigger preferences than the others, since in these cases we have one “expected” and one “unexpected” outcome. If mostly-on and slightly-on both stay put, then expect instead mostly-next, mostly-near, slightly-next, slightly-near to show bigger preferences than the others. Etc. Project preference vectors onto [1,1,1,0,0,0], [0,1,1,0,1,1], [0,0,0,1,1,1] and plot transformed coords by age, where transformed coords basically represent “how much like a partial-support-knower do you act,” “how much like an any-support-from-below-knower do you act,” “how much like an any-contact-is-support-knower do you act.” Overall, across kids, what preference vectors do we see, binned by age group? (plot mean vectors over time?) Could imagine getting closer to [1,1,1,0,0,0] as above or getting better on everything, even the ones that aren’t disparate on possibility (i.e. might expect a baby who “really gets it” to not care about something staying in midair vs. staying when placed next to a cabinet, because they’re both obviously impossible; OR might expect a baby who “really gets it” to differentiate even this subtle difference in probability because hey, maybe it’s a sticky table or my perception is noisy or something. Nothing in Baillargeon stage theory predicts getting better at this comparison with age, so it’s a nice test.
+
+
+## 'Looking personalities'
+
+Separate from the question about physics, we can use the 'control' events to ask about the dynamics of looking time in these experiments. For these, we'll return to the main dataset and split off the control events:
+
+```{r}
+controldata <- pilotdata %>%
+  filter(event == "same"|event == "calibration"|event=="salience")
+
+
+
+#Keep all the subject-level variables we'll be caring about!
+subjlevel <- controldata %>%
+  select(-c("videonum","calibration", "duration","left","ooftime", "right", "stimuli","trialnum","event","concept","object","unexpectedLeft",               "unexpectedRight","lessExpectedLeft","outcomeLeft", "outcomeRight",                 "comparison", "fracLeft", "fracLessExpected", "fracAbs", "metric", "totalLT", "child.proquint", "fracLeft_tr")) %>%
+  group_by(shortId)%>%
+  slice(1)%>%
+  ungroup() %>%
+  select(-X)
+```
+
+Then, we'll calculate a series of per-child/per-session measures:
+
+Side bias: fractional looking time to R during ‘same’ events (3 events/session) 
+
+```{r}
+sidebias <- controldata %>%
+  filter(event == "same")%>%
+  group_by(shortId)%>%
+  dplyr::summarize(sidebias = 1-mean(fracLeft_tr))
+
+sidebias = merge(sidebias, subjlevel, by=c("shortId"))
+```
+
+Stickiness: |fLT – 0.5| during ‘same’ events (3 events/session)
+
+```{r}
+stickiness <- controldata %>%
+  filter(event == "same")%>%
+  group_by(shortId)%>%
+  dplyr::summarize(stickiness = abs(mean(fracLeft_tr)-0.5))
+
+stickiness = merge(stickiness, subjlevel, by=c("shortId"))
+```
+
+Sensitivity: fLT to more interesting during 'salience' events (3 events/session)
+
+```{r}
+# sensitivity <- controldata %>%
+#   filter(event == "salience")%>%
+#   mutate(fracLessExpected_tr)
+#   group_by(shortId)%>%
+#   dplyr::summarize(sensitivity = mean(fracLeft_tr))
+```
+
+Total looking time (all events)
+
+How stable are control measures across sessions, and do they change with age?
+Partition variance for each measure:  measure ~ age + (1|child/session). (Fraction of total variance explained = intraclass correlation coefficient.) Report coefficient of age & test for significance.
+Display overall distributions of these measures (one mean per child) and plot measures against sessions (e.g., one line per child)
+
+### Mood
+
+Are controls well predicted by mood measures? Regress each control measure (using means per session, and |(mean fLT to right) - 0.5| for side bias as a measure of strength of bias to either side) using model: measure ~ 1 + parentscore + childscore + childactivity + timesincewaking + timeuntilsleep + trial# + (1|child). Report overall significance of model (based on F value) and coefficients of individual predictors. Predictors:
+Parent score: mean of z-scored parent items
+Child score: mean of z-scored child items rested, healthy, happy
+Child activity: calm-active score
+Time since waking up
+Time until due for sleep (“overdue” = 0, “no schedule” = missing data.)
+
+### Looking Personalities x Test Effects
+
+How well does side bias during control stimuli predict side bias during tests? sb_test ~ sb_control + (1|child). Use mean looking time to right across all same/test trials in a session (sb_control includes up to 3 ‘same’ trials, sb_test includes all other trials except calibration). Report coefficient & test for significance of sb_control.
+
+How well does sensitivity control predict fLT on events? fLT ~ sensitivity + (1|child). One mean fLT value per session, including all tests with unambiguous expected outcome to adults (excluding calibration, same, table up-continue, stay/fall without mostly-on as one of the outcomes). Report coefficient & test for significance of sensitivity.
+
+How well does stickiness predict noisiness of data? variance_salience ~ stickiness + (1|child). Report coefficient & test for significance of stickiness.
+
+How stable are kids’ looking patterns on test stimuli across sessions? How much do the specific videos (e.g. object choices, backgrounds) matter in comparison to the event types?
+fLT_trial ~ concept/event/comparison + concept:event:comparison:object + concept:event:comparison:object:cameraangle + concept:event:comparison:object:background + concept:event:comparison:object:flip + trial# + (1|child/comparison) + (1|child:session). Report fraction variance explained by child/comparison & by session, coefficient for trial# with significance, and use ANOVA to report overall effects of object, camera angle, background, & flip across children.
+Do preferences change over the course of the 15 sessions, across children? fLT_trial ~ concept/event/comparison + trial# + session# + (1|child/comparison). Report coefficient for session# and test for significance.
+
+
+
+### Summary Calculations for future studies
+
+(Guidance for future studies, not specific hypotheses about physics/looking personalities)
+
+Summary of children’s preferences on these events:
+
+Bin together each comparison type (each physics comparison + salience control), all measurements per child. Separately bin by concept (gravity, support, inertia). Add total time looking at target and distractor across all trials to get an fLT measurement.
+
+Bootstrap confidence intervals per child by resampling sessions, then trials. 
+
+What fraction of children have a preference for either the expected or unexpected event with 95% CI not overlapping 50% looking, for each grouping? (Just informative for design of future studies - how much data do you need to see individual preferences? May also want to calculate for smaller subsets of the data, e.g. how many sessions until X% children show individually-significant results when group-level effect size is Y.)
+
+
+<!-- OLD CODE BELOW HERE -->
+
+<!-- # Construct 'dummy' data with some basic expected characteristics -->
+<!-- Create simulated data for 12 sessions! We do this by just duplicating the dataset with increasing (equal) slope toward fracLessExpected = 1 (full attention toward most surprising, from adult perspective), and increasing ages by a few days at a time. For items where lessExpected is undefined, we add a bit of noise but leave alone. -->
+
+<!-- ```{r} -->
+<!-- #Key columns -->
+<!-- # shortId - participant identifier (uuid) -->
+<!-- # proquint - readable ID, in case we want to examine cases -->
+<!-- # ageRegistration - child age in months + fractional months -->
+<!-- # stimuli - stimulus identifier -->
+<!-- # trialnum - trial number -->
+<!-- # comparison - specific comparison in physics concept (e.g. "on vs. near") -->
+<!-- # event - physics event (ramp, etc) -->
+<!-- # concept - physics event *category* (lumps a few events together) -->
+<!-- # lessExpectedLeft - location of the less expected version (undefined for items that don't have a less expected version!) -->
+<!-- # fracLessExpected - Fractional looking time to those trials (undefined for items that don't have a less expected version) -->
+<!-- # totalLT - Total trial time in case we want to recover that! -->
+
+<!-- # Construct simulated data (Note, we can make this more complicated over time) -->
+<!-- # For now, it assumes that fracLessExpected values just get higher with sessions, on slopes -->
+<!-- # determined semi randomly for each child/concept, and that ages get older on a slighly random schedule -->
+
+<!-- simulated_12session_data <- pilotdata %>% -->
+<!--   filter(!is.na(fracLessExpected))%>% -->
+<!--   group_by(shortId, concept) %>% -->
+<!--   dplyr::summarize(startMean_sim = mean(fracLessExpected), slope_sim = abs(rnorm(1,0.05,0.01)), startAge = mean(ageRegistration)) %>%#Small, usually positive slopes -->
+<!--   uncount(12, .id = 'session') %>% -->
+<!--   left_join(filter(pilotdata, !is.na(fracLessExpected))) %>% -->
+<!--   mutate(sim_fracLessExpected = startMean_sim + (session-1)*slope_sim + rnorm(1,0, 0.01)) %>% -->
+<!--   mutate(sim_fracLessExpected = ifelse(sim_fracLessExpected < 1, sim_fracLessExpected, 1)) %>% -->
+<!--   mutate(sim_age = startAge + (session-1)*abs(rnorm(1,0.25,0.5))) #Average 1 week between sessions, no allow negative values -->
+
+<!-- simulated_12session_data <- pilotdata %>% -->
+<!--   filter(is.na(fracLessExpected))%>% -->
+<!--   group_by(shortId, concept) %>% -->
+<!--   dplyr::summarize(startMean_sim = mean(fracLessExpected), slope_sim = abs(rnorm(1,0.05,0.01)), startAge = mean(ageRegistration)) %>%#Small, usually positive slopes -->
+<!--   uncount(12, .id = 'session') %>% -->
+<!--   left_join(filter(pilotdata, !is.na(fracLessExpected))) %>% -->
+<!--   mutate(sim_fracLessExpected = startMean_sim + (session-1)*slope_sim + rnorm(1,0, 0.01)) %>% -->
+<!--   mutate(sim_fracLessExpected = ifelse(sim_fracLessExpected < 1, sim_fracLessExpected, 1)) %>% -->
+<!--   mutate(sim_age = startAge + (session-1)*abs(rnorm(1,0.25,0.5))) #Average 1 week between sessions, no allow negative values -->
+
+<!-- ``` -->
+
+
+
+
+<!-- # Initial visualizations - SIMULATED DATA -->
+<!-- * And again, with the simulated data -->
+
+<!-- ```{r} -->
+
+<!-- concept_means_per_child_per_session <- simulated_12session_data %>% -->
+<!--   filter(!is.na(fracLessExpected))%>% -->
+<!--   group_by(shortId, concept, session) %>% -->
+<!--   summarise(fLE = mean(sim_fracLessExpected), age = first(sim_age)) -->
+
+<!-- g <- ggplot(concept_means_per_child_per_session, aes(y = fLE, x = concept)) + -->
+<!--   geom_boxplot() + -->
+<!--   #facet_wrap(~session) +  -->
+<!--   #geom_point(alpha = 0.05) + -->
+<!--   geom_jitter(alpha = 0.1) + -->
+<!--   geom_hline(yintercept=0.5, linetype = 'dashed')+ -->
+<!--   ggtitle('SIMULATED - grand means per concept') -->
+<!-- g -->
+<!-- ``` -->
+
+
+
+<!-- * Graphing by age, each event type separately. (This looks silly because the data is simulated - age and attention to fLE for all concepts both set to increase stepwise) -->
+
+<!-- ```{r} -->
+
+<!-- concept_means_per_child_per_session <- simulated_12session_data %>% -->
+<!--   group_by(shortId, session, concept) %>% -->
+<!--   summarise(fLE = mean(sim_fracLessExpected), age = first(sim_age)) -->
+
+<!-- g <- ggplot(concept_means_per_child_per_session, aes(y = fLE, x = age)) + -->
+<!--   geom_jitter(alpha = 0.1) + -->
+<!--   geom_smooth(method = "lm")+ -->
+<!--   geom_hline(yintercept=0.5, linetype = 'dashed')+ -->
+<!--   facet_wrap(~concept) +  -->
+<!--   ggtitle('Means by age') -->
+<!-- g -->
+<!-- ``` -->
+
+<!-- * Graphing within concepts, e.g. 'stay' -->
+
+<!-- ```{r} -->
+<!-- #  -->
+<!-- # stay_means_per_child_per_comparison <- simulated_12session_data %>% -->
+<!-- #   filter(event == 'stay') %>% -->
+<!-- #   group_by(shortId, session, comparison) %>% -->
+<!-- #   summarise(fLE = mean(sim_fracLessExpected), age = first(sim_age)) -->
+<!-- #  -->
+<!-- # g <- ggplot(stay_means_per_child_per_comparison, aes(y = fLE, x = age)) + -->
+<!-- #   geom_jitter(alpha = 0.1) + -->
+<!-- #   geom_smooth(method = "lm")+ -->
+<!-- #   geom_hline(yintercept=0.5, linetype = 'dashed')+ -->
+<!-- #   facet_wrap(~comparison) +  -->
+<!-- #   ggtitle('Stay') -->
+<!-- # g -->
+<!-- ``` -->
+
+
+<!-- # Then, build up the models -->
+
+<!-- An effect of trial number on TOTAL looking time (prediction: children will look less - totalLT - over time) -->
+
+<!-- ```{r} -->
+<!-- # m <- lme(totalLT ~ trialnum, data = simulated_12session_data, random = ~ 1 | shortId) # LME model, grouping by participant -->
+<!-- # summary(m) -->
+<!-- #  -->
+<!-- # m <- lmer(totalLT ~ trialnum + (1 | shortId), data = simulated_12session_data) # LME model, grouping by participant -->
+<!-- # summary(m) -->
+<!-- ``` -->
+
+
+
+<!-- The key outcome variable is fracLessExpected (fractional looking time to the less-expected video of a pair) for all models. For now, leave out comparisons where this is not defined (need to handle these cases later) -->
+
+<!-- BUT SEE alternate strategy proposed by Jesse: model fracLeft, and then ask whether the factor of interest (TargetLeft) is affected by the stimulus categories we care about.  -->
+
+<!-- * Create the appropriate nested random effects structure. There are two kinds of random effect we want to model: children and stimuli (children have within-condition comparisons, but stimuli do not!).  -->
+
+<!-- -- What kind of slope terms are needed?  -->
+
+<!-- ```{r} -->
+<!-- # m <- lmer(sim_fracLessExpected  ~ 1 + (1|shortId) + (1|stimuli), data = simulated_12session_data) # LME model, grouping by participant * stimuli -->
+<!-- # summary(m) -->
+<!-- ``` -->
+
+
+<!-- * Key modeling question: Model Gravity, Support, and Control in 1 model, or split up?  -->
+
+<!-- We are less interested in *differences among these* than in  *characterizing the trajectory of* each. So, ultimately expect to model separately? But for now, keep them together to write the 'baseline' model.  -->
+
+<!-- Within each (which I think we WILL want to keep together), there are (differently) nested sub-concepts, and then cross-cutting comparisons that test those concepts.  As follows: -->
+
+<!-- Concept > Event > comparison -->
+
+<!-- NA > calibration > NA (need to characterize further) -->
+
+<!-- Control > Salience > boring:interesting -->
+
+<!-- Control > Same > A:B -->
+
+<!-- Gravity > Ramp > down:up -->
+
+<!-- Gravity > Toss > down:up (This IS assumed to be the same as for Ramp) -->
+
+<!-- Support > Stay > "mostly-on:next-to","near:slightly-on","mostly-on:near","mostly-on:slightly-on", "near:next-to"       -->
+
+<!-- Support > Fall > "mostly-on:next-to","near:slightly-on","mostly-on:near","mostly-on:slightly-on", "near:next-to" (These levels ARE equivalent to those in Stay!) -->
+
+<!-- For now, keep all together. This may become intractable! -->
+
+<!-- * Expect that attention to fracLessExpected may vary for each *event type*, which are nested within *concept types*.  E.g. Ramp and Fall events are both within the gravity *concept*.  Ramp and Fall are *not random* (i.e. we don't necessarily require ability to generalize to all possible 'gravity tests'?), but they *are related*.   That is, I think that conceptually the following is wrong (and the glmer package hates it), but not sure how to modify.  -->
+
+<!-- ```{r} -->
+<!-- #m <- lmer(sim_fracLessExpected  ~ event + concept + comparison + (1|shortId) + (1|stimuli), data = simulated_12session_data) # LME model, grouping by participant * stimuli -->
+<!-- #summary(m) -->
+<!-- ``` -->
+
+<!-- * Expect fractions to lessExpected to change as children get older, and, indepedently (???), as they have seen more sessions. Expect that both age and session terms interact with trial number (stuff gets more boring as you go along). -->
+
+<!-- Conceptual point: *How* do we expect them to change? Linearly? Maybe not. In this kind of study, infants seem to have 'sweet spots' with some kind of stimuli, where they initially avoid a novel/complex stimulus, then tune into it. (But not in the other direction.)  Quadratic slopes by concept?  -->
+
+<!-- ```{r} -->
+<!-- #m <- lmer(sim_fracLessExpected  ~ event + concept + comparison + session*trialnum + sim_age*trialnum + (1 | shortId) + (1|stimuli), data = simulated_12session_data)  -->
+<!-- #summary(m) -->
+<!-- ``` -->
+
+<!-- * .... Okay, pretend we settled on the base model! What we really want to know is whether kids have 'interesting' fracLessExpected values (ie different from 50% in either direction, with some constraints on the developmental trajectory), and if so, if their trajectories differ from one another for different concepts.  In particular, we would like to estimate *when* the following concepts depart from chance, and *if* those estimates differ from one another. Ideally, we'd be able to say something about whether it's the case that individual children 'aquire concepts' in a predictable order.  -->
+
+<!-- Control: Salience vs. Same (expect Same to stay at 50%!, by hypothesis/construction of stim there is no consistent difference!) -->
+<!-- Gravity vs. Support? -->
+<!-- Gravity -->
+<!-- Gravity vs. Same? ('Same' constitutes an expected baseline. Should it be a comparison for all other questions?) -->
+<!-- Gravity: Ramp vs. Toss -->
+<!-- Support: Across stay/fall -->
+<!-- Support: Stay vs. Fall (across comparisons, but expectations are opposite) -->
+<!-- Support: "mostly-on:next-to","near:slightly-on","mostly-on:near","mostly-on:slightly-on", "near:next-to" -->
+
+<!-- For this one, we have some hypothesis-driven predictions about order. -->
+
+<!-- (THESE ARE HARD TO SPECIFY!) -->
+
+<!-- In space: mostly-on slightly-on next-to near -->
+
+<!-- Easiest: mostly-on:near -->
+<!-- Harder:  -->
+<!-- Hardest: "near:next-to" -->
+<!-- "mostly-on:next-to","near:slightly-on","mostly-on:slightly-on",  -->
+
+<!-- For ease of visualization, we'll be plotting `fracLessExpected`: percentage of time spent looking at which ever video is most surprising. Here is a box plot of looks to these less expected things by concept.  -->
+
+<!-- ```{r, echo = FALSE} -->
+
+<!-- concept_means_per_child_per_session <- pilotdata %>% -->
+<!--   filter(!is.na(fracLessExpected))%>% -->
+<!--   group_by(shortId, concept) %>% -->
+<!--   summarise(fLE = mean(fracLessExpected), age = first(ageRegistration)) -->
+
+<!-- g <- ggplot(concept_means_per_child_per_session, aes(y = fLE, x = concept)) + -->
+<!--   geom_boxplot() + -->
+<!--   geom_jitter(alpha = 0.1) + -->
+<!--   geom_hline(yintercept=0.5, linetype = 'dashed')+ -->
+<!--   ggtitle('Means per child, per concept') + -->
+<!--   ylab('Fraction looking time toward less expected (fLE)')+ -->
+<!--   xlab('Concept') -->
+<!-- print(g) -->
+<!-- ``` -->
+
+<!-- And the same, organized by age. -->
+<!-- ```{r, echo = FALSE} -->
+
+<!-- concepts_means_by_age <- pilotdata %>% -->
+<!--   filter(!is.na(fracLessExpected))%>% -->
+<!--   group_by(shortId, concept) %>% -->
+<!--   summarise(fLE = mean(fracLessExpected), age = first(ageRegistration)) -->
+
+<!-- g <- ggplot(concepts_means_by_age, aes(y = fLE, x = age)) + -->
+<!--   geom_jitter(alpha = 0.1) + -->
+<!--   geom_smooth(method = "lm")+ -->
+<!--   geom_hline(yintercept=0.5, linetype = 'dashed')+ -->
+<!--   facet_wrap(~concept)+ -->
+<!--   ylab('Fraction looking time toward less expected (fLE)')+ -->
+<!--   xlab('Age in months') -->
+<!-- print(g) -->
+<!-- ``` -->
+
+
+
+
+<!-- ## The problem -->
+
+<!-- For the purposes of this preregistration, we assume that babies begin by not looking anywhere in particular, and then begin looking longer at surprising things (potentially at different points for different categories of things). *This is a major simplifying assumption* and may turn out to be flatly wrong in our dataset. See modeling section for details.  -->
+
+<!-- There is an uncomfortable fact that we expect that babies may actually look longer at *either* the less-surpising or more-surprising event, if they can tell the difference. That is, unequal attention in either direction is interpreted as 'knowing the concept', while equal attention (e.g. treating the comparison of ball tossing up/down the same as the comparison of oatmeal-stirring to oatmeal-stirring) is interpreted to mean no evidence for knowing that concept.  -->
+
+<!-- FORTUNATELY, this is constrained: a standard model is that we expect babies to initially look toward the more familiar thing (because the novel one is too confusing), and then shift toward looking at the surprising thing (which they can learn from/familiar one is too boring.)  Qualitatively, it looks like this (from Hunter & Ames 1988): -->
+
+<!-- ```{r, echo=FALSE, fig.cap="Hunter & Ames (1988) curve", out.width = '100%'} -->
+<!-- #knitr::include_graphics(here("analysis/figs/hunter-ames.png")) -->
+<!-- ``` -->
+
+<!-- ## The solution (for now) -->
+
+<!-- Despite the above, in the realm of physical events specifically, most studies have shown infants to look longer at the surprising thing (though note that they have used single-item presentation rather than two-screen comparisons as we do here.) This suggests two possible solutions for modeling 'learning curves': -->
+
+<!-- - Model linearly: Advantage  -->
+

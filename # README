@@ -1,0 +1,15 @@
+# README
+
+data/
+
+data for Lookit Physics!
+
+
+## Pilot data
+
+This comes pre-processed courtesy Kim et al, copied out of lookitcodingv1.
+
+pilot_included_trials_key.csv is the codebook
+
+pilot_included_trials.csv is the dataset itself!
+
